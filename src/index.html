@@ -4,11 +4,17 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Story App</title>
+
+    <!-- Tambahkan base path agar semua relative path mengacu ke subfolder GitHub Pages -->
+    <base href="/webintermediate-submission2/" />
+
+    <!-- CSS -->
     <link rel="stylesheet" href="styles.css" />
 
-    <link rel="manifest" href="/manifest.json">
+    <!-- Manifest dan Theme -->
+    <link rel="manifest" href="manifest.json" />
     <meta name="theme-color" content="#4CAF50" />
-    
+
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <!-- Leaflet JS -->
@@ -21,6 +27,7 @@
       <nav>
         <a href="#/" id="nav-home">HOME</a>
         <a href="#/add-story" id="nav-add">TAMBAH CERITA</a>
+        <button id="subscribeBtn">Aktifkan Notifikasi</button>
         <a href="#/login" id="nav-login">LOGIN</a>
         <a href="#/register" id="nav-register">REGISTER</a>
         <a href="#" id="nav-logout" style="display: none">LOGOUT</a>
@@ -31,7 +38,16 @@
       <div id="storyContainer"></div>
     </main>
 
-    <script src="sw.js"></script>
-    <script src="index.js"></script>
+    <!-- Penting: Jangan daftarkan service worker dari root, pakai relative path -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js')
+          .then(reg => console.log('SW registered', reg))
+          .catch(err => console.error('SW registration failed', err));
+      }
+    </script>
+
+    <!-- Jangan langsung load dari src/, harus dari hasil bundling Webpack -->
+    <script type="module" src="bundle.js"></script>
   </body>
 </html>
