@@ -7,9 +7,9 @@ module.exports = {
   mode: "development",
   entry: "./src/index.js",
   output: {
-    path: path.resolve(__dirname, "docs"), // Output ke folder docs
+    path: path.resolve(__dirname, "dist"),
     filename: "bundle.js",
-    publicPath: "/webintermediate-submission2/", // Path untuk GitHub Pages
+    publicPath: "/webintermediate-submission2/",
   },
   module: {
     rules: [
