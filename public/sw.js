@@ -6,8 +6,8 @@ const urlsToCache = [
   "/main.js",
   "/icons/icon-192x192.png",
   "/icons/icon-512x512.png",
-  "./styles.css", // pastikan file ini ada di dist/
-  "./manifest.json", // pastikan ini juga disalin ke dist/
+  "./styles.css",
+  "./manifest.json",
 ];
 
 self.addEventListener("install", (event) => {
