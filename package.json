@@ -9,7 +9,6 @@
     "predeploy": "npm run build",
     "deploy": "gh-pages -d docs"
   },
-  "homepage": "https://dimassfeb-09.github.io/webintermediate-submission2",
   "keywords": [],
   "author": "",
   "license": "ISC",

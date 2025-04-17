@@ -1,24 +1,26 @@
-const CACHE_NAME = 'wardi-cache-v1';
+const CACHE_NAME = "wardi-cache-v1";
 const urlsToCache = [
-  '/',
-  '/index.html',
-  '/styles.css',
-  '/main.js',
-  '/icons/icon-192x192.png',
-  '/icons/icon-512x512.png'
+  "/",
+  "/index.html",
+  "/styles.css",
+  "/main.js",
+  "/icons/icon-192x192.png",
+  "/icons/icon-512x512.png",
+  "./styles.css", // pastikan file ini ada di dist/
+  "./manifest.json", // pastikan ini juga disalin ke dist/
 ];
 
-self.addEventListener('install', event => {
+self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => {
+    caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(urlsToCache);
     })
   );
 });
 
-self.addEventListener('fetch', event => {
+self.addEventListener("fetch", (event) => {
   event.respondWith(
-    caches.match(event.request).then(response => {
+    caches.match(event.request).then((response) => {
       return response || fetch(event.request);
     })
   );
