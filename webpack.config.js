@@ -1,36 +1,37 @@
-const path = require('path');
-const HtmlWebpackPlugin = require('html-webpack-plugin');
-const { CleanWebpackPlugin } = require('clean-webpack-plugin');
+const path = require("path");
+const HtmlWebpackPlugin = require("html-webpack-plugin");
+const { CleanWebpackPlugin } = require("clean-webpack-plugin");
 
 module.exports = {
-    mode: "development",
-    entry: './src/index.js',
-    output: {
-        path: path.resolve(__dirname, 'dist'),
-        filename: 'bundle.js'
-    },
-    module: {
-        rules: [
-            {
-                test: /\.css$/,
-                use: ['style-loader', 'css-loader']
-            }
-        ]
-    },
-    plugins: [
-        new CleanWebpackPlugin(),
-        new HtmlWebpackPlugin({
-            template: './src/index.html',
-            filename: 'index.html',
-            inject: true
-        })
+  mode: "development",
+  entry: "./src/index.js",
+  output: {
+    path: path.resolve(__dirname, "docs"),
+    filename: "bundle.js",
+    publicPath: "/webintermediate-submission2/", // ← penting untuk GitHub Pages
+  },
+  module: {
+    rules: [
+      {
+        test: /\.css$/,
+        use: ["style-loader", "css-loader"],
+      },
     ],
-    devServer: {
-        static: path.join(__dirname, 'src'),
-        compress: true,
-        port: 8080,
-        open: true, 
-        hot: true   
-    },
-    devtool: 'source-map'
+  },
+  plugins: [
+    new CleanWebpackPlugin(),
+    new HtmlWebpackPlugin({
+      template: "./src/index.html",
+      filename: "index.html",
+      inject: true,
+    }),
+  ],
+  devServer: {
+    static: path.join(__dirname, "src"),
+    compress: true,
+    port: 8080,
+    open: true,
+    hot: true,
+  },
+  devtool: "source-map",
 };
