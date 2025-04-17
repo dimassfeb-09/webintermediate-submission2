@@ -7,7 +7,7 @@
     "build": "webpack",
     "test": "echo \"Error: no test specified\" && exit 1",
     "predeploy": "npm run build",
-    "deploy": "gh-pages -d dist"
+    "deploy": "gh-pages -d docs"
   },
   "homepage": "https://dimassfeb-09.github.io/webintermediate-submission2",
   "keywords": [],

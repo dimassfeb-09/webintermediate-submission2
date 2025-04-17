@@ -7,7 +7,7 @@ module.exports = {
   mode: "development",
   entry: "./src/index.js",
   output: {
-    path: path.resolve(__dirname, "dist"),
+    path: path.resolve(__dirname, "docs"),
     filename: "bundle.js",
     publicPath: "/webintermediate-submission2/",
   },
@@ -30,7 +30,8 @@ module.exports = {
     // Menyalin file statis (manifest.json, sw.js, dll) ke docs/
     new CopyPlugin({
       patterns: [
-        { from: "src/manifest.json", to: "manifest.json" },
+        { from: "public", to: "." },
+        { from: "src/styles.css", to: "styles.css" },
         { from: "src/sw.js", to: "sw.js" },
         { from: "src/icons", to: "icons" }, // Menyalin folder icons
       ],
