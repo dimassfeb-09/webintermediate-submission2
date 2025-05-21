@@ -8,7 +8,7 @@ document.addEventListener("DOMContentLoaded", () => {
 if ("serviceWorker" in navigator && "PushManager" in window) {
   window.addEventListener("load", async () => {
     try {
-      const reg = await navigator.serviceWorker.register("/sw.js");
+      const reg = await navigator.serviceWorker.register("sw.js");
       console.log("Service Worker registered:", reg);
 
       const permission = await Notification.requestPermission();

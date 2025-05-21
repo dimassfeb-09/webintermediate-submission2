@@ -1,7 +1,7 @@
 import StoryModel from "../../models/StoryModel.js";
 import StoryView from "../StoryView.js";
 import StoryPresenter from "../../presenters/StoryPresenter.js";
-import { getAllOfflineStories } from "../../utils/idb.js";
+import { getAllStoriesFromDB } from "../../utils/idb.js";
 
 const HomePage = {
   async render() {
@@ -40,31 +40,75 @@ const HomePage = {
     const presenter = new StoryPresenter(model, view, token);
 
     // Load online stories
-    await presenter.loadStories();
+    const onlineStories = await presenter.loadStories();
 
     // Load offline stories
-    const offlineStories = await getAllOfflineStories();
-    if (offlineStories.length > 0) {
-      const offlineSection = document.createElement("div");
-      offlineSection.innerHTML = `<h3>Cerita Offline</h3>`;
+    const offlineStories = await getAllStoriesFromDB();
+    const storyMap = new Map();
 
-      offlineStories.forEach((story) => {
-        const storyElement = document.createElement("div");
-        storyElement.classList.add("story-card");
+    onlineStories.forEach((story) => {
+      storyMap.set(story.id, story);
+    });
 
-        const imageUrl = URL.createObjectURL(story.image);
+    offlineStories.forEach((story) => {
+      if (!storyMap.has(story.id)) {
+        storyMap.set(story.id, story);
+      }
+    });
 
-        storyElement.innerHTML = `
-          <p>${story.description}</p>
-          <img src="${imageUrl}" alt="Gambar Offline" style="max-width: 100%">
-          <p><strong>Lokasi:</strong> ${story.lat}, ${story.lng}</p>
-        `;
+    const allStories = Array.from(storyMap.values());
 
-        offlineSection.appendChild(storyElement);
-      });
+    // Fungsi untuk render satu cerita jadi card
+    function renderStoryCard(story) {
+      const storyElement = document.createElement("div");
+      storyElement.classList.add("story-card");
 
-      container.appendChild(offlineSection);
+      let imageUrl = "";
+
+      if (story.image instanceof Blob) {
+        imageUrl = URL.createObjectURL(story.image);
+      } else if (typeof story.image === "string" && story.image.trim() !== "") {
+        imageUrl = story.image;
+      } else if (
+        typeof story.photoUrl === "string" &&
+        story.photoUrl.trim() !== ""
+      ) {
+        imageUrl = story.photoUrl;
+      } else {
+        imageUrl =
+          "data:image/svg+xml;charset=UTF-8," +
+          encodeURIComponent(`
+        <svg width="400" height="200" xmlns="http://www.w3.org/2000/svg" 
+          style="background:#ddd">
+          <rect width="400" height="200" fill="#ccc" />
+          <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" 
+            fill="#999" font-family="Arial" font-size="20">
+            No Image
+          </text>
+        </svg>
+      `);
+      }
+
+      storyElement.innerHTML = `
+    <div class="card-image" style="max-height: 200px; overflow: hidden;">
+      <img src="${imageUrl}" alt="Gambar Cerita" style="width: 100%; object-fit: cover;">
+    </div>
+    <div class="card-content" style="padding: 10px;">
+      <p>${story.description}</p>
+      <p><strong>Lokasi:</strong> ${story.lat}, ${story.lng}</p>
+    </div>
+  `;
+
+      return storyElement;
     }
+
+    // Clear container
+    container.innerHTML = "";
+
+    // Render semua cerita sekaligus
+    allStories.forEach((story) => {
+      container.appendChild(renderStoryCard(story));
+    });
   },
 };
 

@@ -47,9 +47,7 @@ export async function subscribeToPush() {
 
     const result = await response.json();
     console.log("Push subscription response:", result);
-    alert("Berhasil subscribe push notification!");
   } catch (error) {
     console.error("Push subscription failed:", error);
-    alert("Gagal subscribe push notification.");
   }
 }

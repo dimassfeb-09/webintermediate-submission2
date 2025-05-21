@@ -1,6 +1,6 @@
 import StoryModel from "../../models/StoryModel.js";
 import { initMap, getSelectedLocation } from "../../utils/map.js";
-import { addStoryToIDB } from "../../utils/idb.js";
+import { saveStoriesToDB } from "../../utils/idb.js";
 
 const AddStoryPage = {
   async render() {
@@ -140,8 +140,8 @@ const AddStoryPage = {
     });
 
     const saveStoryOffline = async (story) => {
-      await addStoryToIDB(story);
-      alert("Cerita disimpan secara offline!");
+      await saveStoriesToDB(story);
+      console.log("Cerita disimpan secara offline!");
     };
 
     document
