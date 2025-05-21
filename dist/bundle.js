@@ -1,329 +1,6 @@
 /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
-/***/ "./node_modules/idb/build/index.js":
-/*!*****************************************!*\
-  !*** ./node_modules/idb/build/index.js ***!
-  \*****************************************/
-/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   deleteDB: () => (/* binding */ deleteDB),
-/* harmony export */   openDB: () => (/* binding */ openDB),
-/* harmony export */   unwrap: () => (/* binding */ unwrap),
-/* harmony export */   wrap: () => (/* binding */ wrap)
-/* harmony export */ });
-const instanceOfAny = (object, constructors) => constructors.some((c) => object instanceof c);
-
-let idbProxyableTypes;
-let cursorAdvanceMethods;
-// This is a function to prevent it throwing up in node environments.
-function getIdbProxyableTypes() {
-    return (idbProxyableTypes ||
-        (idbProxyableTypes = [
-            IDBDatabase,
-            IDBObjectStore,
-            IDBIndex,
-            IDBCursor,
-            IDBTransaction,
-        ]));
-}
-// This is a function to prevent it throwing up in node environments.
-function getCursorAdvanceMethods() {
-    return (cursorAdvanceMethods ||
-        (cursorAdvanceMethods = [
-            IDBCursor.prototype.advance,
-            IDBCursor.prototype.continue,
-            IDBCursor.prototype.continuePrimaryKey,
-        ]));
-}
-const transactionDoneMap = new WeakMap();
-const transformCache = new WeakMap();
-const reverseTransformCache = new WeakMap();
-function promisifyRequest(request) {
-    const promise = new Promise((resolve, reject) => {
-        const unlisten = () => {
-            request.removeEventListener('success', success);
-            request.removeEventListener('error', error);
-        };
-        const success = () => {
-            resolve(wrap(request.result));
-            unlisten();
-        };
-        const error = () => {
-            reject(request.error);
-            unlisten();
-        };
-        request.addEventListener('success', success);
-        request.addEventListener('error', error);
-    });
-    // This mapping exists in reverseTransformCache but doesn't exist in transformCache. This
-    // is because we create many promises from a single IDBRequest.
-    reverseTransformCache.set(promise, request);
-    return promise;
-}
-function cacheDonePromiseForTransaction(tx) {
-    // Early bail if we've already created a done promise for this transaction.
-    if (transactionDoneMap.has(tx))
-        return;
-    const done = new Promise((resolve, reject) => {
-        const unlisten = () => {
-            tx.removeEventListener('complete', complete);
-            tx.removeEventListener('error', error);
-            tx.removeEventListener('abort', error);
-        };
-        const complete = () => {
-            resolve();
-            unlisten();
-        };
-        const error = () => {
-            reject(tx.error || new DOMException('AbortError', 'AbortError'));
-            unlisten();
-        };
-        tx.addEventListener('complete', complete);
-        tx.addEventListener('error', error);
-        tx.addEventListener('abort', error);
-    });
-    // Cache it for later retrieval.
-    transactionDoneMap.set(tx, done);
-}
-let idbProxyTraps = {
-    get(target, prop, receiver) {
-        if (target instanceof IDBTransaction) {
-            // Special handling for transaction.done.
-            if (prop === 'done')
-                return transactionDoneMap.get(target);
-            // Make tx.store return the only store in the transaction, or undefined if there are many.
-            if (prop === 'store') {
-                return receiver.objectStoreNames[1]
-                    ? undefined
-                    : receiver.objectStore(receiver.objectStoreNames[0]);
-            }
-        }
-        // Else transform whatever we get back.
-        return wrap(target[prop]);
-    },
-    set(target, prop, value) {
-        target[prop] = value;
-        return true;
-    },
-    has(target, prop) {
-        if (target instanceof IDBTransaction &&
-            (prop === 'done' || prop === 'store')) {
-            return true;
-        }
-        return prop in target;
-    },
-};
-function replaceTraps(callback) {
-    idbProxyTraps = callback(idbProxyTraps);
-}
-function wrapFunction(func) {
-    // Due to expected object equality (which is enforced by the caching in `wrap`), we
-    // only create one new func per func.
-    // Cursor methods are special, as the behaviour is a little more different to standard IDB. In
-    // IDB, you advance the cursor and wait for a new 'success' on the IDBRequest that gave you the
-    // cursor. It's kinda like a promise that can resolve with many values. That doesn't make sense
-    // with real promises, so each advance methods returns a new promise for the cursor object, or
-    // undefined if the end of the cursor has been reached.
-    if (getCursorAdvanceMethods().includes(func)) {
-        return function (...args) {
-            // Calling the original function with the proxy as 'this' causes ILLEGAL INVOCATION, so we use
-            // the original object.
-            func.apply(unwrap(this), args);
-            return wrap(this.request);
-        };
-    }
-    return function (...args) {
-        // Calling the original function with the proxy as 'this' causes ILLEGAL INVOCATION, so we use
-        // the original object.
-        return wrap(func.apply(unwrap(this), args));
-    };
-}
-function transformCachableValue(value) {
-    if (typeof value === 'function')
-        return wrapFunction(value);
-    // This doesn't return, it just creates a 'done' promise for the transaction,
-    // which is later returned for transaction.done (see idbObjectHandler).
-    if (value instanceof IDBTransaction)
-        cacheDonePromiseForTransaction(value);
-    if (instanceOfAny(value, getIdbProxyableTypes()))
-        return new Proxy(value, idbProxyTraps);
-    // Return the same value back if we're not going to transform it.
-    return value;
-}
-function wrap(value) {
-    // We sometimes generate multiple promises from a single IDBRequest (eg when cursoring), because
-    // IDB is weird and a single IDBRequest can yield many responses, so these can't be cached.
-    if (value instanceof IDBRequest)
-        return promisifyRequest(value);
-    // If we've already transformed this value before, reuse the transformed value.
-    // This is faster, but it also provides object equality.
-    if (transformCache.has(value))
-        return transformCache.get(value);
-    const newValue = transformCachableValue(value);
-    // Not all types are transformed.
-    // These may be primitive types, so they can't be WeakMap keys.
-    if (newValue !== value) {
-        transformCache.set(value, newValue);
-        reverseTransformCache.set(newValue, value);
-    }
-    return newValue;
-}
-const unwrap = (value) => reverseTransformCache.get(value);
-
-/**
- * Open a database.
- *
- * @param name Name of the database.
- * @param version Schema version.
- * @param callbacks Additional callbacks.
- */
-function openDB(name, version, { blocked, upgrade, blocking, terminated } = {}) {
-    const request = indexedDB.open(name, version);
-    const openPromise = wrap(request);
-    if (upgrade) {
-        request.addEventListener('upgradeneeded', (event) => {
-            upgrade(wrap(request.result), event.oldVersion, event.newVersion, wrap(request.transaction), event);
-        });
-    }
-    if (blocked) {
-        request.addEventListener('blocked', (event) => blocked(
-        // Casting due to https://github.com/microsoft/TypeScript-DOM-lib-generator/pull/1405
-        event.oldVersion, event.newVersion, event));
-    }
-    openPromise
-        .then((db) => {
-        if (terminated)
-            db.addEventListener('close', () => terminated());
-        if (blocking) {
-            db.addEventListener('versionchange', (event) => blocking(event.oldVersion, event.newVersion, event));
-        }
-    })
-        .catch(() => { });
-    return openPromise;
-}
-/**
- * Delete a database.
- *
- * @param name Name of the database.
- */
-function deleteDB(name, { blocked } = {}) {
-    const request = indexedDB.deleteDatabase(name);
-    if (blocked) {
-        request.addEventListener('blocked', (event) => blocked(
-        // Casting due to https://github.com/microsoft/TypeScript-DOM-lib-generator/pull/1405
-        event.oldVersion, event));
-    }
-    return wrap(request).then(() => undefined);
-}
-
-const readMethods = ['get', 'getKey', 'getAll', 'getAllKeys', 'count'];
-const writeMethods = ['put', 'add', 'delete', 'clear'];
-const cachedMethods = new Map();
-function getMethod(target, prop) {
-    if (!(target instanceof IDBDatabase &&
-        !(prop in target) &&
-        typeof prop === 'string')) {
-        return;
-    }
-    if (cachedMethods.get(prop))
-        return cachedMethods.get(prop);
-    const targetFuncName = prop.replace(/FromIndex$/, '');
-    const useIndex = prop !== targetFuncName;
-    const isWrite = writeMethods.includes(targetFuncName);
-    if (
-    // Bail if the target doesn't exist on the target. Eg, getAll isn't in Edge.
-    !(targetFuncName in (useIndex ? IDBIndex : IDBObjectStore).prototype) ||
-        !(isWrite || readMethods.includes(targetFuncName))) {
-        return;
-    }
-    const method = async function (storeName, ...args) {
-        // isWrite ? 'readwrite' : undefined gzipps better, but fails in Edge :(
-        const tx = this.transaction(storeName, isWrite ? 'readwrite' : 'readonly');
-        let target = tx.store;
-        if (useIndex)
-            target = target.index(args.shift());
-        // Must reject if op rejects.
-        // If it's a write operation, must reject if tx.done rejects.
-        // Must reject with op rejection first.
-        // Must resolve with op value.
-        // Must handle both promises (no unhandled rejections)
-        return (await Promise.all([
-            target[targetFuncName](...args),
-            isWrite && tx.done,
-        ]))[0];
-    };
-    cachedMethods.set(prop, method);
-    return method;
-}
-replaceTraps((oldTraps) => ({
-    ...oldTraps,
-    get: (target, prop, receiver) => getMethod(target, prop) || oldTraps.get(target, prop, receiver),
-    has: (target, prop) => !!getMethod(target, prop) || oldTraps.has(target, prop),
-}));
-
-const advanceMethodProps = ['continue', 'continuePrimaryKey', 'advance'];
-const methodMap = {};
-const advanceResults = new WeakMap();
-const ittrProxiedCursorToOriginalProxy = new WeakMap();
-const cursorIteratorTraps = {
-    get(target, prop) {
-        if (!advanceMethodProps.includes(prop))
-            return target[prop];
-        let cachedFunc = methodMap[prop];
-        if (!cachedFunc) {
-            cachedFunc = methodMap[prop] = function (...args) {
-                advanceResults.set(this, ittrProxiedCursorToOriginalProxy.get(this)[prop](...args));
-            };
-        }
-        return cachedFunc;
-    },
-};
-async function* iterate(...args) {
-    // tslint:disable-next-line:no-this-assignment
-    let cursor = this;
-    if (!(cursor instanceof IDBCursor)) {
-        cursor = await cursor.openCursor(...args);
-    }
-    if (!cursor)
-        return;
-    cursor = cursor;
-    const proxiedCursor = new Proxy(cursor, cursorIteratorTraps);
-    ittrProxiedCursorToOriginalProxy.set(proxiedCursor, cursor);
-    // Map this double-proxy back to the original, so other cursor methods work.
-    reverseTransformCache.set(proxiedCursor, unwrap(cursor));
-    while (cursor) {
-        yield proxiedCursor;
-        // If one of the advancing methods was not called, call continue().
-        cursor = await (advanceResults.get(proxiedCursor) || cursor.continue());
-        advanceResults.delete(proxiedCursor);
-    }
-}
-function isIteratorProp(target, prop) {
-    return ((prop === Symbol.asyncIterator &&
-        instanceOfAny(target, [IDBIndex, IDBObjectStore, IDBCursor])) ||
-        (prop === 'iterate' && instanceOfAny(target, [IDBIndex, IDBObjectStore])));
-}
-replaceTraps((oldTraps) => ({
-    ...oldTraps,
-    get(target, prop, receiver) {
-        if (isIteratorProp(target, prop))
-            return iterate;
-        return oldTraps.get(target, prop, receiver);
-    },
-    has(target, prop) {
-        return isIteratorProp(target, prop) || oldTraps.has(target, prop);
-    },
-}));
-
-
-
-
-/***/ }),
-
 /***/ "./node_modules/leaflet/dist/leaflet-src.js":
 /*!**************************************************!*\
   !*** ./node_modules/leaflet/dist/leaflet-src.js ***!
@@ -14986,6 +14663,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
 /* harmony export */ });
+/* harmony import */ var _utils_idb__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../utils/idb */ "./src/utils/idb.js");
+
+
 class StoryPresenter {
   constructor(model, view, token) {
     this.model = model;
@@ -14995,19 +14675,22 @@ class StoryPresenter {
 
   async loadStories() {
     try {
-        const stories = await this.model.fetchStories(this.token);
+      const stories = await this.model.fetchStories(this.token);
+      const validStories = stories.filter(
+        (story) => story.lat !== null && story.lon !== null
+      );
 
-        const validStories = stories.filter(story => story.lat !== null && story.lon !== null);
-        
-        console.log('📌 Data cerita setelah difilter:', validStories);
+      this.view.renderStories(validStories);
 
-        this.view.renderStories(validStories);
+      await (0,_utils_idb__WEBPACK_IMPORTED_MODULE_0__.saveStoriesToDB)(validStories);
+
+      return validStories;
     } catch (error) {
-        console.error('❌ Gagal memuat cerita:', error);
-        this.view.renderError('Gagal memuat cerita. Silakan coba lagi.');
+      console.error("❌ Gagal memuat cerita:", error);
+      this.view.renderError("Gagal memuat cerita. Silakan coba lagi.");
+      return [];
     }
-}
-
+  }
 }
 
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (StoryPresenter);
@@ -15024,44 +14707,73 @@ class StoryPresenter {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   addStoryToIDB: () => (/* binding */ addStoryToIDB),
-/* harmony export */   deleteStoryFromIDB: () => (/* binding */ deleteStoryFromIDB),
-/* harmony export */   getAllOfflineStories: () => (/* binding */ getAllOfflineStories),
-/* harmony export */   initDB: () => (/* binding */ initDB)
+/* harmony export */   getAllStoriesFromDB: () => (/* binding */ getAllStoriesFromDB),
+/* harmony export */   openDB: () => (/* binding */ openDB),
+/* harmony export */   saveStoriesToDB: () => (/* binding */ saveStoriesToDB)
 /* harmony export */ });
-/* harmony import */ var idb__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! idb */ "./node_modules/idb/build/index.js");
+const DB_NAME = "StoryAppDB";
+const DB_VERSION = 1;
+const STORE_NAME = "stories";
 
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(DB_NAME, DB_VERSION);
 
-const DB_NAME = "story-app";
-const STORE_NAME = "offline-stories";
+    request.onerror = () => reject(request.error);
 
-const initDB = async () => {
-  return (0,idb__WEBPACK_IMPORTED_MODULE_0__.openDB)(DB_NAME, 1, {
-    upgrade(db) {
+    request.onsuccess = () => resolve(request.result);
+
+    request.onupgradeneeded = (event) => {
+      const db = event.target.result;
       if (!db.objectStoreNames.contains(STORE_NAME)) {
-        db.createObjectStore(STORE_NAME, {
-          keyPath: "id",
-          autoIncrement: true,
-        });
+        db.createObjectStore(STORE_NAME, { keyPath: "id" });
       }
-    },
+    };
   });
-};
+}
 
-const addStoryToIDB = async (story) => {
-  const db = await initDB();
-  await db.add(STORE_NAME, story);
-};
+async function saveStoriesToDB(stories) {
+  try {
+    const db = await openDB();
 
-const getAllOfflineStories = async () => {
-  const db = await initDB();
-  return db.getAll(STORE_NAME);
-};
+    // Ambil data dulu di luar transaksi
+    const allStoriesOffline = await getAllStoriesFromDB();
 
-const deleteStoryFromIDB = async (id) => {
-  const db = await initDB();
-  return db.delete(STORE_NAME, id);
-};
+    const existingIds = new Set(allStoriesOffline.map((story) => story.id));
+
+    // Mulai transaksi baru
+    const tx = db.transaction(STORE_NAME, "readwrite");
+    const store = tx.objectStore(STORE_NAME);
+
+    let savedCount = 0;
+
+    for (const story of stories) {
+      if (!existingIds.has(story.id)) {
+        store.put(story); // Jangan await di sini, put() itu sync (request async tapi tidak promise)
+        savedCount++;
+      } else {
+        console.info(`Story with id ${story.id} already exists, skipping.`);
+      }
+    }
+
+    await tx.complete; // tunggu transaksi selesai
+
+    console.info(`Total stories saved: ${savedCount}`);
+  } catch (error) {
+    console.error("Failed to save stories to IndexedDB:", error);
+  }
+}
+
+async function getAllStoriesFromDB() {
+  const db = await openDB();
+  const tx = db.transaction(STORE_NAME, "readonly");
+  const store = tx.objectStore(STORE_NAME);
+  return new Promise((resolve, reject) => {
+    const request = store.getAll();
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
 
 
 /***/ }),
@@ -15178,10 +14890,8 @@ async function subscribeToPush() {
 
     const result = await response.json();
     console.log("Push subscription response:", result);
-    alert("Berhasil subscribe push notification!");
   } catch (error) {
     console.error("Push subscription failed:", error);
-    alert("Gagal subscribe push notification.");
   }
 }
 
@@ -15507,8 +15217,8 @@ const AddStoryPage = {
     });
 
     const saveStoryOffline = async (story) => {
-      await (0,_utils_idb_js__WEBPACK_IMPORTED_MODULE_2__.addStoryToIDB)(story);
-      alert("Cerita disimpan secara offline!");
+      await (0,_utils_idb_js__WEBPACK_IMPORTED_MODULE_2__.saveStoriesToDB)(story);
+      console.log("Cerita disimpan secara offline!");
     };
 
     document
@@ -15626,31 +15336,75 @@ const HomePage = {
     const presenter = new _presenters_StoryPresenter_js__WEBPACK_IMPORTED_MODULE_2__["default"](model, view, token);
 
     // Load online stories
-    await presenter.loadStories();
+    const onlineStories = await presenter.loadStories();
 
     // Load offline stories
-    const offlineStories = await (0,_utils_idb_js__WEBPACK_IMPORTED_MODULE_3__.getAllOfflineStories)();
-    if (offlineStories.length > 0) {
-      const offlineSection = document.createElement("div");
-      offlineSection.innerHTML = `<h3>Cerita Offline</h3>`;
+    const offlineStories = await (0,_utils_idb_js__WEBPACK_IMPORTED_MODULE_3__.getAllStoriesFromDB)();
+    const storyMap = new Map();
 
-      offlineStories.forEach((story) => {
-        const storyElement = document.createElement("div");
-        storyElement.classList.add("story-card");
+    onlineStories.forEach((story) => {
+      storyMap.set(story.id, story);
+    });
 
-        const imageUrl = URL.createObjectURL(story.image);
+    offlineStories.forEach((story) => {
+      if (!storyMap.has(story.id)) {
+        storyMap.set(story.id, story);
+      }
+    });
 
-        storyElement.innerHTML = `
-          <p>${story.description}</p>
-          <img src="${imageUrl}" alt="Gambar Offline" style="max-width: 100%">
-          <p><strong>Lokasi:</strong> ${story.lat}, ${story.lng}</p>
-        `;
+    const allStories = Array.from(storyMap.values());
 
-        offlineSection.appendChild(storyElement);
-      });
+    // Fungsi untuk render satu cerita jadi card
+    function renderStoryCard(story) {
+      const storyElement = document.createElement("div");
+      storyElement.classList.add("story-card");
 
-      container.appendChild(offlineSection);
+      let imageUrl = "";
+
+      if (story.image instanceof Blob) {
+        imageUrl = URL.createObjectURL(story.image);
+      } else if (typeof story.image === "string" && story.image.trim() !== "") {
+        imageUrl = story.image;
+      } else if (
+        typeof story.photoUrl === "string" &&
+        story.photoUrl.trim() !== ""
+      ) {
+        imageUrl = story.photoUrl;
+      } else {
+        imageUrl =
+          "data:image/svg+xml;charset=UTF-8," +
+          encodeURIComponent(`
+        <svg width="400" height="200" xmlns="http://www.w3.org/2000/svg" 
+          style="background:#ddd">
+          <rect width="400" height="200" fill="#ccc" />
+          <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" 
+            fill="#999" font-family="Arial" font-size="20">
+            No Image
+          </text>
+        </svg>
+      `);
+      }
+
+      storyElement.innerHTML = `
+    <div class="card-image" style="max-height: 200px; overflow: hidden;">
+      <img src="${imageUrl}" alt="Gambar Cerita" style="width: 100%; object-fit: cover;">
+    </div>
+    <div class="card-content" style="padding: 10px;">
+      <p>${story.description}</p>
+      <p><strong>Lokasi:</strong> ${story.lat}, ${story.lng}</p>
+    </div>
+  `;
+
+      return storyElement;
     }
+
+    // Clear container
+    container.innerHTML = "";
+
+    // Render semua cerita sekaligus
+    allStories.forEach((story) => {
+      container.appendChild(renderStoryCard(story));
+    });
   },
 };
 
@@ -15897,7 +15651,7 @@ document.addEventListener("DOMContentLoaded", () => {
 if ("serviceWorker" in navigator && "PushManager" in window) {
   window.addEventListener("load", async () => {
     try {
-      const reg = await navigator.serviceWorker.register("/sw.js");
+      const reg = await navigator.serviceWorker.register("sw.js");
       console.log("Service Worker registered:", reg);
 
       const permission = await Notification.requestPermission();
