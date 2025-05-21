@@ -1,9 +1,8 @@
 {
   "version": 2,
-  "name": "nama-proyekmu",
   "builds": [
     {
-      "src": "build/web/**",
+      "src": "docs/**",
       "use": "@vercel/static"
     }
   ],
@@ -12,5 +11,6 @@
       "src": "/(.*)",
       "dest": "/index.html"
     }
-  ]
+  ],
+  "outputDirectory": "docs"
 }
