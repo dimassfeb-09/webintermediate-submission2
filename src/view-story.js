@@ -122,43 +122,15 @@ class ViewStory {
     return storyElement;
   }
 
-  createDeleteButton(storyId) {
-    const button = document.createElement("button");
-    button.textContent = "Hapus";
-    button.classList.add("delete-btn");
-    Object.assign(button.style, {
-      backgroundColor: "#e74c3c",
-      color: "white",
-      border: "none",
-      padding: "8px 12px",
-      cursor: "pointer",
-      marginTop: "8px",
-      borderRadius: "4px",
-    });
-    button.addEventListener("click", () => {
-      const confirmDelete = confirm("Yakin ingin menghapus story ini?");
-      if (confirmDelete && this.deleteHandler) {
-        this.deleteHandler(storyId);
-      }
-    });
-    return button;
-  }
-
   createFavoriteButton(story, isFavorited) {
     const button = document.createElement("button");
-    button.textContent = isFavorited
-      ? "🗑️ Hapus dari Favorit"
-      : "💖 Simpan ke Favorit";
-    button.classList.add("favorite-btn");
-    Object.assign(button.style, {
-      backgroundColor: isFavorited ? "#c0392b" : "#27ae60",
-      color: "white",
-      border: "none",
-      padding: "6px 10px",
-      marginTop: "8px",
-      borderRadius: "4px",
-      cursor: "pointer",
-    });
+    if (isFavorited) {
+      button.textContent = "Hapus dari Favorit";
+      button.classList.add("favorite-btn", "remove");
+    } else {
+      button.textContent = "Simpan ke Favorit";
+      button.classList.add("favorite-btn", "saved");
+    }
     button.addEventListener("click", () => {
       if (this.favoriteHandler) {
         this.favoriteHandler(story, isFavorited);
@@ -170,20 +142,24 @@ class ViewStory {
   createUnfavoriteButton(storyId) {
     const button = document.createElement("button");
     button.textContent = "🗑️ Hapus dari Favorit";
-    button.classList.add("unfavorite-btn");
-    Object.assign(button.style, {
-      backgroundColor: "#c0392b",
-      color: "white",
-      border: "none",
-      padding: "6px 10px",
-      marginTop: "8px",
-      borderRadius: "4px",
-      cursor: "pointer",
-    });
+    button.classList.add("favorite-btn", "remove");
     button.addEventListener("click", () => {
       const confirmDelete = confirm("Yakin ingin menghapus dari favorit?");
       if (confirmDelete && this.unfavoriteHandler) {
         this.unfavoriteHandler(storyId);
+      }
+    });
+    return button;
+  }
+
+  createDeleteButton(storyId) {
+    const button = document.createElement("button");
+    button.textContent = "Hapus";
+    button.classList.add("delete-btn");
+    button.addEventListener("click", () => {
+      const confirmDelete = confirm("Yakin ingin menghapus story ini?");
+      if (confirmDelete && this.deleteHandler) {
+        this.deleteHandler(storyId);
       }
     });
     return button;

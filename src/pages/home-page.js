@@ -92,51 +92,82 @@ const homePage = {
       pushBtn = document.createElement("button");
       pushBtn.id = "push-toggle-btn";
       pushBtn.className = "push-toggle";
-      pushBtn.style.display = "none";
       nav.appendChild(pushBtn);
     }
 
-    if (Notification.permission === "default") {
-      const permission = await Notification.requestPermission();
-      if (permission !== "granted") return;
-    }
+    const updateBtn = (status) => {
+      // status: "granted" | "denied" | "default" | "subscribed" | "unsubscribed"
+      if (!pushBtn) return;
 
-    if (Notification.permission === "denied") {
-      if (pushBtn) {
+      if (status === "denied") {
         pushBtn.textContent = "Notifikasi diblokir";
         pushBtn.disabled = true;
         pushBtn.style.display = "inline-block";
+      } else if (status === "subscribed") {
+        pushBtn.textContent = "🔕 Notifikasi diaktifkan (klik untuk matikan)";
+        pushBtn.disabled = false;
+        pushBtn.style.display = "inline-block";
+        pushBtn.classList.add("subscribed");
+      } else if (status === "unsubscribed") {
+        pushBtn.textContent = "🔔 Aktifkan Notifikasi";
+        pushBtn.disabled = false;
+        pushBtn.style.display = "inline-block";
+        pushBtn.classList.remove("subscribed");
+      } else {
+        pushBtn.textContent = "Minta izin notifikasi";
+        pushBtn.disabled = false;
+        pushBtn.style.display = "inline-block";
+        pushBtn.classList.remove("subscribed");
       }
+    };
+
+    if (Notification.permission === "denied") {
+      updateBtn("denied");
       return;
+    }
+
+    if (Notification.permission === "default") {
+      updateBtn("default");
     }
 
     try {
       await registerServiceWorker();
       const swReg = await navigator.serviceWorker.ready;
 
-      const updateBtnText = async () => {
+      // Jika permission default, coba request permission saat klik tombol
+      if (Notification.permission === "default") {
+        pushBtn.addEventListener("click", async () => {
+          const permission = await Notification.requestPermission();
+          if (permission === "granted") {
+            // Cek subscribe status dan update tombol
+            const subscribed = await isSubscribed(swReg);
+            updateBtn(subscribed ? "subscribed" : "unsubscribed");
+          } else if (permission === "denied") {
+            updateBtn("denied");
+          }
+        });
+        return; // jangan lanjut ke event listener subscribe/unsubscribe dulu
+      }
+
+      // Jika permission granted
+      const updateSubscriptionStatus = async () => {
         const subscribed = await isSubscribed(swReg);
-        if (pushBtn) {
-          pushBtn.textContent = subscribed ? "🔕 Unsubscribe" : "🔔 Subscribe";
-          pushBtn.classList.toggle("subscribed", subscribed);
-        }
+        updateBtn(subscribed ? "subscribed" : "unsubscribed");
       };
 
-      await updateBtnText();
+      await updateSubscriptionStatus();
 
-      if (pushBtn) {
-        pushBtn.style.display = "inline-block";
-        pushBtn.addEventListener("click", async () => {
-          const subscribed = await isSubscribed(swReg);
-          if (subscribed) {
-            await unsubscribeUser(swReg, token);
-            alert("Berhenti berlangganan notifikasi.");
-          } else {
-            await subscribeUser(swReg, token);
-          }
-          await updateBtnText();
-        });
-      }
+      pushBtn.addEventListener("click", async () => {
+        const subscribed = await isSubscribed(swReg);
+        if (subscribed) {
+          await unsubscribeUser(swReg, token);
+          alert("Berhenti berlangganan notifikasi.");
+        } else {
+          await subscribeUser(swReg, token);
+          alert("Berhasil berlangganan notifikasi.");
+        }
+        await updateSubscriptionStatus();
+      });
     } catch (err) {
       console.error("Gagal setup push notification:", err);
       if (pushBtn) {
