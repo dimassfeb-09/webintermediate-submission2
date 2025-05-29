@@ -1,0 +1,2 @@
+APP_URL=https://webintermediate-submission2.vercel.app/
+MAP_SERVICE_API_KEY=<5IH6bKPA4wDFEhLyuHs5>

@@ -1,0 +1,500 @@
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  padding: 0;
+  height: 100%;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  color: #444;
+  margin: 0;
+  padding: 0;
+  line-height: 1.6;
+}
+
+main {
+  padding: 0;
+  margin: 0;
+}
+
+main#main-content {
+  view-transition-name: main-content;
+}
+
+::view-transition-old(main-content),
+::view-transition-new(main-content) {
+  animation-duration: 300ms;
+  animation-timing-function: ease-in-out;
+}
+
+header {
+  background-color: #ff9800;
+  color: white;
+  padding: 1rem;
+  text-align: center;
+  font-weight: bold;
+  font-size: large;
+  margin-bottom: 0;
+}
+
+nav a {
+  text-decoration: none;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 4px;
+  transition: background-color 0.3s ease;
+}
+
+nav a:hover {
+  color: #d1b78f;
+  font-weight: bold;
+}
+
+.skip-to-content {
+  position: absolute;
+  top: 20px;
+  left: -150px;
+  background: #ff9800;
+  color: #fff;
+  padding: 12px 18px;
+  z-index: 1000;
+  text-decoration: none;
+  font-weight: bold;
+  border-radius: 0 12px 12px 0;
+  transition:
+    left 0.3s ease,
+    background 0.3s ease;
+}
+
+.skip-to-content:focus {
+  left: 0;
+  background: #ff9800;
+}
+
+#map {
+  width: 100%;
+  height: 400px;
+  margin: 0;
+  padding: 0;
+}
+
+#storyContainer {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+  max-width: 1500px;
+  width: 100%;
+  margin: 10px auto;
+  padding: 0;
+}
+
+.story {
+  border: 1px solid #ccc;
+  text-align: center;
+  padding: 16px;
+  border-radius: 8px;
+  background-color: #fff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+#storyform {
+  border: 1px solid;
+  padding: 30px;
+  border-radius: 20px;
+  width: 90%;
+  max-width: 720px;
+  margin: 10px auto;
+}
+
+#storyform label {
+  font-weight: 600;
+  color: #ff9800;
+  display: block;
+  margin: 10px 0 2px;
+}
+
+#storyform input,
+#storyform textarea {
+  width: 100%;
+  border-radius: 12px;
+  font-size: 15px;
+  padding: 10px 2.5px;
+  margin-bottom: 5px;
+}
+
+#storyform textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+#storyform input:focus,
+#storyform textarea:focus {
+  border-color: #ff9800;
+  outline: none;
+}
+
+#storyform input[type="file"] {
+  background: transparent;
+  padding: 10px 0;
+  color: white;
+  border: none;
+}
+
+#storyform button[type="submit"] {
+  color: white;
+  padding: 12px;
+  font-size: 16px;
+  border: none;
+  width: 100%;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: transform 0.2s ease-in-out;
+}
+
+#storyform button[type="submit"]:hover {
+  transform: scale(1.05);
+}
+
+#storyform button {
+  background-color: #ff9800;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  margin: 4px;
+  border-radius: 12px;
+  font-weight: bold;
+  cursor: pointer;
+  transition:
+    background-color 0.3s ease,
+    transform 0.2s ease;
+}
+
+#storyform button:hover {
+  background-color: #ff9800;
+  transform: scale(1.05);
+}
+
+#cameraPreview,
+#uploadPreviewImg {
+  max-width: 100%;
+  max-height: 480px;
+  margin: 20px auto;
+  border-radius: 10px;
+  display: block;
+}
+
+#cameraButtons {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+input[type="file"] {
+  color: white;
+  font-weight: 500;
+  border: none;
+  padding: 6px 8px;
+  background-color: #f8fffc;
+  border-radius: 8px;
+}
+
+input[type="file"]::file-selector-button {
+  background-color: #ff9800;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.3s ease;
+}
+
+input[type="file"]::file-selector-button:hover {
+  background-color: #ff9800;
+  transform: scale(1.02);
+}
+
+.form {
+  background-color: rgb(155, 118, 49);
+  max-width: 420px;
+  margin: 60px auto;
+  padding: 30px 50px;
+  border-radius: 20px;
+  color: #ff9800;
+  border: 1px solid #ff9800;
+}
+
+.form h2 {
+  text-align: center;
+  margin-bottom: 20px;
+  color: #ff9800;
+}
+
+.form form div {
+  margin-bottom: 16px;
+}
+
+.form label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.form input {
+  width: 100%;
+  padding: 10px;
+  border: none;
+  border-radius: 12px;
+  background: #f8fffc;
+  font-size: 15px;
+}
+
+.form input:focus {
+  border: 2px solid #ff9800;
+  outline: none;
+  box-shadow: 0 0 6px  #ff9800;
+}
+
+.form button[type="submit"] {
+  width: 100%;
+  padding: 15px;
+  font-size: 16px;
+  color: #ff9800;
+  border: none;
+  border-radius: 14px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: transform 0.2s ease-in-out;
+}
+
+.form button[type="submit"]:hover {
+  filter: brightness(1.1);
+}
+
+.form #message {
+  margin-top: 12px;
+  text-align: center;
+  font-weight: bold;
+}
+
+.form p {
+  text-align: center;
+  margin-top: 16px;
+}
+
+.form a {
+  color: #ff9800;
+  font-weight: bold;
+  text-decoration: none;
+}
+
+.form a:hover {
+  text-decoration: underline;
+}
+
+.push-toggle {
+  background-color: #007bff;
+  color: white;
+  padding: 0.4rem 1rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.push-toggle.subscribed {
+  background-color: #dc3545;
+}
+
+.delete-btn {
+  margin-top: 10px;
+  background-color: #c0392b;
+  color: white;
+  padding: 5px 10px;
+  border: none;
+  cursor: pointer;
+}
+
+#btn-load-favorites {
+  margin: 10px 10px;
+  background: none;
+  border: none;
+  color: #ff9800;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+  font-weight: bold;
+  transition: color 0.3s ease;
+}
+
+#btn-load-favorites:hover {
+  color: #055c5e;
+}
+
+@media (max-width: 1200px) {
+  .form {
+    max-width: 90%;
+    padding: 25px 40px;
+  }
+
+  #storyContainer {
+    gap: 16px;
+    padding: 0 10px;
+  }
+
+  .story {
+    padding: 12px;
+  }
+
+  #storyform,
+  .form {
+    padding: 20px 30px;
+  }
+
+  #storyform input,
+  #storyform textarea,
+  .form input {
+    font-size: 14px;
+    padding: 8px;
+  }
+
+  .form button[type="submit"],
+  #storyform button[type="submit"] {
+    font-size: 15px;
+    padding: 12px;
+  }
+
+  header {
+    font-size: 1rem;
+    padding: 0.8rem;
+  }
+}
+
+@media (max-width: 768px) {
+  header {
+    font-size: medium;
+    padding: 0.75rem;
+  }
+
+  nav a {
+    padding: 6px 10px;
+    font-size: 14px;
+  }
+
+  .form,
+  #storyform {
+    padding: 20px;
+    margin: 30px auto;
+    width: 90%;
+  }
+
+  .form input,
+  #storyform input,
+  #storyform textarea {
+    font-size: 14px;
+    padding: 8px;
+  }
+
+  .form button[type="submit"],
+  #storyform button[type="submit"] {
+    padding: 12px;
+    font-size: 15px;
+  }
+
+  #cameraPreview,
+  #uploadPreviewImg {
+    width: 100%;
+    height: auto;
+  }
+
+  #storyContainer {
+    grid-template-columns: 1fr;
+    padding: 0 10px;
+  }
+
+  .skip-to-content {
+    font-size: 14px;
+    padding: 10px 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  header {
+    font-size: small;
+    padding: 0.5rem;
+  }
+
+  .form h2 {
+    font-size: 20px;
+  }
+
+  nav a {
+    padding: 4px 8px;
+    font-size: 13px;
+  }
+
+  .form,
+  #storyform {
+    padding: 16px;
+  }
+
+  .form button,
+  #storyform button {
+    font-size: 14px;
+    padding: 10px;
+  }
+
+  #cameraButtons {
+    flex-direction: column;
+    gap: 8px;
+  }
+}
+
+@media (max-width: 360px) {
+  header {
+    font-size: 13px;
+    padding: 0.5rem;
+  }
+
+  .form,
+  #storyform {
+    padding: 14px;
+    width: 95%;
+  }
+
+  .form input,
+  #storyform input,
+  #storyform textarea {
+    font-size: 13px;
+    padding: 6px;
+  }
+
+  .form button,
+  #storyform button {
+    font-size: 13px;
+    padding: 8px 12px;
+  }
+
+  nav a {
+    font-size: 12px;
+    padding: 4px 6px;
+  }
+
+  .skip-to-content {
+    font-size: 12px;
+    padding: 8px 12px;
+  }
+
+  #cameraPreview,
+  #uploadPreviewImg {
+    max-height: 280px;
+  }
+
+  #map {
+    height: 250px;
+  }
+}
