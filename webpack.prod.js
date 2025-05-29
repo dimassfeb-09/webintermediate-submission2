@@ -21,6 +21,7 @@ module.exports = merge(common, {
     new InjectManifest({
       swSrc: path.resolve(__dirname, "src/scripts/sw.js"),
       swDest: "sw.js",
+      maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
     }),
   ],
 });

@@ -19,9 +19,7 @@ module.exports = {
         exclude: /node_modules/,
         use: {
           loader: "babel-loader",
-          options: {
-            presets: ["@babel/preset-env"],
-          },
+          options: { presets: ["@babel/preset-env"] },
         },
       },
       {
@@ -40,10 +38,6 @@ module.exports = {
     }),
     new CopyWebpackPlugin({
       patterns: [
-        {
-          from: path.resolve(__dirname, "src/scripts/sw.js"),
-          to: "sw.js",
-        },
         {
           from: path.resolve(__dirname, "public/app.webmanifest"),
           to: "app.webmanifest",

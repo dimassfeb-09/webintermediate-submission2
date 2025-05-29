@@ -19,17 +19,16 @@ export function isServiceWorkerAvailable() {
 
 export async function registerServiceWorker() {
   if ("serviceWorker" in navigator) {
-    try {
-      const registration = await navigator.serviceWorker.register("/sw.js");
-      console.log("Service worker terdaftar:", registration);
-      return registration;
-    } catch (error) {
-      console.error("Gagal mendaftar service worker:", error);
-      return null;
-    }
-  } else {
-    console.log("Service worker tidak didukung browser ini");
-    return null;
+    window.addEventListener("load", () => {
+      navigator.serviceWorker
+        .register("/sw.js", { type: "module" })
+        .then((reg) => {
+          console.log("Service Worker registered:", reg);
+        })
+        .catch((err) => {
+          console.log("Service Worker registration failed:", err);
+        });
+    });
   }
 }
 
