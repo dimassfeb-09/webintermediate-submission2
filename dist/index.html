@@ -1,1 +1,111 @@
-<!doctype html><html lang="id"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>Story App</title><link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/><script src="https://unpkg.com/leaflet/dist/leaflet.js"></script><link rel="manifest" href="/app.webmanifest"/><script defer="defer" src="/app.e6f2079e77e973cf15db.js"></script><link href="/app.css" rel="stylesheet"></head><body><a href="#main-content" class="skip-to-content">Lewati ke Konten</a><header><h1>Story App</h1><nav><a href="#/" id="home-page">Home</a> <a href="#/add-story" id="add-page">Add Story</a> <a href="#/register" id="regist-page">Register</a> <a href="#/login" id="login-page">Login</a> <a href="#" id="logout" style="display: none">Logout</a></nav></header><main id="main-content"><div id="storyContainer"></div></main><loading-indicator id="loading"></loading-indicator></body></html>
+<!doctype html><html lang="id"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>Story App</title><link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/><script src="https://unpkg.com/leaflet/dist/leaflet.js"></script><link rel="manifest" href="/app.webmanifest"/><style>nav {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem 2rem;
+        background-color: #00695c;
+        color: white;
+        font-family: Arial, sans-serif;
+      }
+      .nav-left {
+        font-weight: 700;
+        font-size: 1.5rem;
+      }
+      .nav-right {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+      }
+      .nav-right a {
+        color: white;
+        text-decoration: none;
+        padding: 6px 12px;
+        border-radius: 4px;
+        transition: background-color 0.3s ease;
+      }
+      .nav-right a:hover {
+        background-color: rgba(255 255 255 / 0.2);
+      }
+      #push-toggle-btn {
+        background-color: #004d40;
+        border: none;
+        color: white;
+        padding: 6px 12px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: 600;
+      }
+      #push-toggle-btn.subscribed {
+        background-color: #c62828;
+      }</style><script defer="defer" src="/app.238685599074bca2534e.js"></script><link href="/app.css" rel="stylesheet"></head><body><a href="#main-content" class="skip-to-content">Lewati ke Konten</a><header><nav><div class="nav-left">Story App</div><div class="nav-right"><a href="#/" id="home-page">Home</a> <a href="#/add-story" id="add-page">Add Story</a> <a href="#/register" id="regist-page">Register</a> <a href="#/login" id="login-page">Login</a> <a href="#" id="logout" style="display: none">Logout</a></div></nav></header><main id="main-content"><div id="storyContainer"></div></main><loading-indicator id="loading"></loading-indicator><script>// Contoh fungsi dummy isSubscribed
+      async function isSubscribed() {
+        // Cek di localStorage sebagai simulasi status
+        return localStorage.getItem("pushSubscribed") === "true";
+      }
+
+      async function subscribeUser() {
+        localStorage.setItem("pushSubscribed", "true");
+        alert("Notifikasi diaktifkan.");
+      }
+
+      async function unsubscribeUser() {
+        localStorage.setItem("pushSubscribed", "false");
+        alert("Notifikasi dinonaktifkan.");
+      }
+
+      // Setup tombol toggle push notification
+      document.addEventListener("DOMContentLoaded", async () => {
+        const navRight = document.querySelector("nav .nav-right");
+        if (!navRight) return;
+
+        let pushBtn = document.createElement("button");
+        pushBtn.id = "push-toggle-btn";
+        pushBtn.textContent = "🔔 Cek Status Notifikasi";
+        pushBtn.style.display = "none"; // Sembunyikan dulu
+
+        navRight.appendChild(pushBtn);
+
+        // Minta izin notifikasi kalau belum granted
+        if (Notification.permission === "default") {
+          const permission = await Notification.requestPermission();
+          if (permission !== "granted") {
+            pushBtn.textContent = "Notifikasi tidak diizinkan";
+            pushBtn.disabled = true;
+            pushBtn.style.display = "inline-block";
+            return;
+          }
+        }
+
+        if (Notification.permission === "denied") {
+          pushBtn.textContent = "Notifikasi diblokir";
+          pushBtn.disabled = true;
+          pushBtn.style.display = "inline-block";
+          return;
+        }
+
+        // Update status tombol sesuai langganan
+        const updateBtn = async () => {
+          const subscribed = await isSubscribed();
+          if (subscribed) {
+            pushBtn.textContent = "🔕 Nonaktifkan Notifikasi";
+            pushBtn.classList.add("subscribed");
+          } else {
+            pushBtn.textContent = "🔔 Aktifkan Notifikasi";
+            pushBtn.classList.remove("subscribed");
+          }
+          pushBtn.style.display = "inline-block";
+        };
+
+        await updateBtn();
+
+        // Klik toggle
+        pushBtn.addEventListener("click", async () => {
+          const subscribed = await isSubscribed();
+          if (subscribed) {
+            await unsubscribeUser();
+          } else {
+            await subscribeUser();
+          }
+          await updateBtn();
+        });
+      });</script></body></html>
